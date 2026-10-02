@@ -1,0 +1,47 @@
+# Odoo source checkouts (separate upstream repositories)
+/odoo/
+/odoo19/
+
+# Python virtual environments
+/venv/
+/venv*/
+/.venv/
+/.venv*/
+
+# Python bytecode and test/build artifacts
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.coverage
+htmlcov/
+*.egg-info/
+build/
+dist/
+
+# Local configuration and secrets
+.env
+.env.*
+!.env.example
+/odoo.conf
+
+# Odoo runtime data, logs, and database backups
+/filestore/
+/sessions/
+*.log
+*.dump
+*.sql
+*.sql.gz
+*.zip
+
+# JavaScript dependencies and generated assets
+node_modules/
+
+# Editor and operating-system files
+.idea/
+.DS_Store
+Thumbs.db
+
+# Unrelated practice addons
+/custom_addons/estate_rental/
+/custom_addons/my_estate/

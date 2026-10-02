@@ -1,0 +1,16 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_project_project_erp_user,project.project ERP user,project.model_project_project,erp_delivery_core.group_erp_delivery_user,1,0,0,0
+access_project_task_erp_user,project.task ERP user,project.model_project_task,erp_delivery_core.group_erp_delivery_user,1,0,0,0
+access_erp_solution_erp_user,erp.solution ERP user,model_erp_solution,erp_delivery_core.group_erp_delivery_user,1,0,0,0
+access_project_erp_module_erp_user,project.erp.module ERP user,model_project_erp_module,erp_delivery_core.group_erp_delivery_user,1,0,0,0
+access_res_partner_erp_user,res.partner ERP user,base.model_res_partner,erp_delivery_core.group_erp_delivery_user,1,0,0,0
+access_project_project_erp_consultant,project.project ERP consultant,project.model_project_project,erp_delivery_core.group_erp_delivery_consultant,1,1,1,1
+access_project_task_erp_consultant,project.task ERP consultant,project.model_project_task,erp_delivery_core.group_erp_delivery_consultant,1,1,1,1
+access_erp_solution_erp_consultant,erp.solution ERP consultant,model_erp_solution,erp_delivery_core.group_erp_delivery_consultant,1,0,0,0
+access_project_erp_module_erp_consultant,project.erp.module ERP consultant,model_project_erp_module,erp_delivery_core.group_erp_delivery_consultant,1,1,1,1
+access_res_partner_erp_consultant,res.partner ERP consultant,base.model_res_partner,erp_delivery_core.group_erp_delivery_consultant,1,0,0,0
+access_project_project_erp_manager,project.project ERP manager,project.model_project_project,erp_delivery_core.group_erp_delivery_manager,1,1,1,1
+access_project_task_erp_manager,project.task ERP manager,project.model_project_task,erp_delivery_core.group_erp_delivery_manager,1,1,1,1
+access_erp_solution_erp_manager,erp.solution ERP manager,model_erp_solution,erp_delivery_core.group_erp_delivery_manager,1,1,1,1
+access_project_erp_module_erp_manager,project.erp.module ERP manager,model_project_erp_module,erp_delivery_core.group_erp_delivery_manager,1,1,1,1
+access_res_partner_erp_manager,res.partner ERP manager,base.model_res_partner,erp_delivery_core.group_erp_delivery_manager,1,1,1,1
