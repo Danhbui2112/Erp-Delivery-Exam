@@ -15,6 +15,14 @@ class TestErpDeliverySecurity(TransactionCase):
             "erp_delivery_core.group_erp_delivery_consultant"
         )
         cls.manager_group = cls.env.ref("erp_delivery_core.group_erp_delivery_manager")
+        cls.solution = cls.env["erp.solution"].create(
+            {
+                "name": "ERP Security Solution",
+                "code": "ERP-SECURITY",
+                "category": "custom",
+                "company_id": cls.company_a.id,
+            }
+        )
 
         cls.consultant = cls._create_user(
             "erp_security_consultant",
@@ -101,8 +109,80 @@ class TestErpDeliverySecurity(TransactionCase):
             hidden_project.read(["name"])
         with self.assertRaises(AccessError):
             hidden_project.write({"name": "Unauthorized edit"})
+        with self.assertRaises(AccessError):
+            self.consultant_project.with_user(self.consultant).unlink()
+        with self.assertRaises(AccessError):
+            self.consultant_project.with_user(self.consultant).write(
+                {"privacy_visibility": "followers"}
+            )
+
+    def test_consultant_task_and_module_scope_matches_project_scope(self):
+        own_task = self.env["project.task"].create(
+            {"name": "Assigned Task", "project_id": self.consultant_project.id}
+        )
+        other_task = self.env["project.task"].create(
+            {"name": "Unassigned Task", "project_id": self.other_project.id}
+        )
+        own_module = self.env["project.erp.module"].create(
+            {
+                "project_id": self.consultant_project.id,
+                "solution_id": self.solution.id,
+            }
+        )
+        other_module = self.env["project.erp.module"].create(
+            {
+                "project_id": self.other_project.id,
+                "solution_id": self.solution.id,
+            }
+        )
+
+        task_model = self.env["project.task"].with_user(self.consultant).with_context(
+            allowed_company_ids=[self.company_a.id]
+        )
+        module_model = self.env["project.erp.module"].with_user(
+            self.consultant
+        ).with_context(allowed_company_ids=[self.company_a.id])
+        self.assertEqual(
+            task_model.search([("id", "in", [own_task.id, other_task.id])]).ids,
+            [own_task.id],
+        )
+        self.assertEqual(
+            module_model.search(
+                [("id", "in", [own_module.id, other_module.id])]
+            ).ids,
+            [own_module.id],
+        )
+        with self.assertRaises(AccessError):
+            other_task.with_user(self.consultant).read(["name"])
+        with self.assertRaises(AccessError):
+            other_module.with_user(self.consultant).read(["planned_effort"])
+        with self.assertRaises(AccessError):
+            own_task.with_user(self.consultant).unlink()
+        with self.assertRaises(AccessError):
+            own_module.with_user(self.consultant).unlink()
+        with self.assertRaises(AccessError):
+            own_module.with_user(self.consultant).write(
+                {"project_id": self.other_project.id}
+            )
+
+        own_task.with_user(self.consultant).write({"risk_level": "high"})
+        self.assertEqual(own_task.risk_level, "high")
+
+    def test_internal_cost_is_restricted_to_delivery_manager(self):
+        for user in (self.consultant, self.company_a_user):
+            with self.assertRaises(AccessError):
+                self.solution.with_user(user).read(["internal_cost"])
+
+        manager_solution = self.solution.with_user(self.manager).with_company(
+            self.company_a
+        )
+        manager_solution.write({"internal_cost": 875.0})
+        self.assertEqual(manager_solution.internal_cost, 875.0)
 
     def test_manager_sees_all_projects_in_allowed_company(self):
+        self.assertTrue(
+            self.manager.has_group("erp_delivery_core.group_erp_delivery_consultant")
+        )
         visible_ids = self.env["project.project"].with_user(self.manager).with_context(
             allowed_company_ids=[self.company_a.id]
         ).search(

@@ -5,6 +5,16 @@
         <field name="model">project.project</field>
         <field name="inherit_id" ref="project.edit_project"/>
         <field name="arch" type="xml">
+            <xpath expr="//header" position="inside">
+                <button
+                    name="action_golive"
+                    type="object"
+                    string="Go Live"
+                    class="oe_highlight"
+                    groups="erp_delivery_core.group_erp_delivery_consultant"
+                    invisible="delivery_state == 'golive'"
+                />
+            </xpath>
             <xpath expr="//notebook" position="inside">
                 <page name="erp_delivery" string="ERP Delivery">
                     <group>
@@ -14,12 +24,12 @@
                             <field name="customer_code" readonly="1"/>
                             <field name="health_status" readonly="1" widget="badge"/>
                             <field name="go_live_expected_date"/>
-                            <field name="go_live_actual_date"/>
+                            <field name="go_live_actual_date" readonly="1"/>
                             <field name="duration_days"/>
-                            <field name="contract_value"/>
+                            <field name="contract_value" readonly="1"/>
                         </group>
                         <group string="Delivery Metrics">
-                            <field name="erp_member_ids" widget="many2many_tags"/>
+                            <field name="erp_member_ids" widget="many2many_tags" readonly="1"/>
                             <field name="module_count" readonly="1"/>
                             <field name="planned_effort_total" readonly="1"/>
                             <field name="actual_effort_total" readonly="1"/>
@@ -43,5 +53,66 @@
                 </page>
             </xpath>
         </field>
+    </record>
+
+    <record id="project_search_erp_delivery" model="ir.ui.view">
+        <field name="name">project.project.search.erp.delivery</field>
+        <field name="model">project.project</field>
+        <field name="inherit_id" ref="project.view_project_project_filter"/>
+        <field name="arch" type="xml">
+            <xpath expr="//search" position="inside">
+                <field name="project_code"/>
+                <field name="delivery_state"/>
+                <field name="health_status"/>
+                <filter
+                    name="expected_golive_date"
+                    string="Expected Go-Live"
+                    date="go_live_expected_date"
+                />
+                <filter
+                    name="delivery_at_risk"
+                    string="At Risk or Critical"
+                    domain="[('health_status', 'in', ['amber', 'red'])]"
+                />
+            </xpath>
+            <xpath expr="//search/group" position="inside">
+                <filter
+                    name="group_delivery_state"
+                    string="Delivery Status"
+                    context="{'group_by': 'delivery_state'}"
+                />
+                <filter
+                    name="group_delivery_health"
+                    string="Delivery Health"
+                    context="{'group_by': 'health_status'}"
+                />
+                <filter
+                    name="group_expected_golive_month"
+                    string="Expected Go-Live Month"
+                    context="{'group_by': 'go_live_expected_date:month'}"
+                />
+            </xpath>
+        </field>
+    </record>
+
+    <record id="project_list_erp_delivery" model="ir.ui.view">
+        <field name="name">project.project.list.erp.delivery</field>
+        <field name="model">project.project</field>
+        <field name="inherit_id" ref="project.view_project"/>
+        <field name="arch" type="xml">
+            <xpath expr="//list/field[@name='name']" position="after">
+                <field name="project_code" optional="show"/>
+                <field name="delivery_state" widget="badge" optional="show"/>
+                <field name="health_status" widget="badge" optional="show"/>
+                <field name="go_live_expected_date" optional="hide"/>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="action_erp_delivery_projects" model="ir.actions.act_window">
+        <field name="name">Delivery Projects</field>
+        <field name="res_model">project.project</field>
+        <field name="view_mode">kanban,list,form</field>
+        <field name="search_view_id" ref="project.view_project_project_filter"/>
     </record>
 </odoo>

@@ -91,5 +91,35 @@ class TestErpDeliverySaleIntegration(TransactionCase):
         self.assertTrue(project.partner_id)
         self.assertTrue(project.user_id)
         self.assertTrue(project.erp_module_ids)
+        if "quality_gate_ids" in project._fields:
+            self.env["project.quality.gate"].create(
+                {"project_id": project.id, "score": 100.0}
+            )
         self.assertTrue(project.action_golive())
         self.assertEqual(project.delivery_state, "golive")
+
+    def test_go_live_requires_the_linked_sales_order_to_remain_confirmed(self):
+        order = self._create_order(state="sale")
+        order.action_create_erp_project()
+        project = order.erp_project_id
+        order.action_cancel()
+
+        with self.assertRaises(UserError):
+            project.action_golive()
+
+    def test_quality_gate_and_sales_checks_compose_when_quality_is_installed(self):
+        if "quality_gate_ids" not in self.env["project.project"]._fields:
+            self.skipTest("ERP Delivery Quality Gate is not installed.")
+
+        order = self._create_order(state="sale")
+        order.action_create_erp_project()
+        project = order.erp_project_id
+        with self.assertRaises(UserError):
+            project.action_golive()
+
+        self.env["project.quality.gate"].create(
+            {"project_id": project.id, "score": 90.0}
+        )
+        order.action_cancel()
+        with self.assertRaises(UserError):
+            project.action_golive()

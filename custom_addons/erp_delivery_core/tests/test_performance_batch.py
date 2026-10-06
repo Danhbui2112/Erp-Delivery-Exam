@@ -64,3 +64,46 @@ class TestErpDeliveryBatchPerformance(TransactionCase):
         self.assertEqual(projects.mapped("module_count"), [1] * 50)
         self.assertEqual(projects.mapped("mandatory_task_count"), [10] * 50)
         self.assertEqual(projects.mapped("progress_rate"), [0.0] * 50)
+
+    def test_stored_metrics_recompute_when_source_records_change(self):
+        company = self.env.company
+        partner = self.env["res.partner"].create({"name": "Recompute Customer"})
+        solution = self.env["erp.solution"].create(
+            {
+                "name": "Recompute Solution",
+                "code": "RECOMPUTE",
+                "category": "custom",
+            }
+        )
+        project = self.env["project.project"].create(
+            {
+                "name": "Recompute Project",
+                "company_id": company.id,
+                "partner_id": partner.id,
+                "user_id": self.env.user.id,
+            }
+        )
+        module = self.env["project.erp.module"].create(
+            {
+                "project_id": project.id,
+                "solution_id": solution.id,
+                "planned_effort": 4.0,
+                "actual_effort": 1.0,
+            }
+        )
+        task = self.env["project.task"].create(
+            {
+                "name": "Risk Tracking Task",
+                "project_id": project.id,
+                "is_mandatory_for_golive": True,
+                "risk_level": "low",
+            }
+        )
+        self.assertEqual(project.actual_effort_total, 1.0)
+        self.assertEqual(project.health_status, "green")
+
+        module.write({"actual_effort": 3.0})
+        task.write({"risk_level": "high"})
+
+        self.assertEqual(project.actual_effort_total, 3.0)
+        self.assertEqual(project.health_status, "amber")

@@ -1,4 +1,5 @@
-from odoo import fields, models
+from odoo import _, fields, models
+from odoo.exceptions import AccessError
 
 
 class ProjectErpModule(models.Model):
@@ -60,3 +61,19 @@ class ProjectErpModule(models.Model):
         default="draft",
         required=True,
     )
+
+    def write(self, vals):
+        is_consultant = self.env.user.has_group(
+            "erp_delivery_core.group_erp_delivery_consultant"
+        )
+        is_manager = self.env.user.has_group(
+            "erp_delivery_core.group_erp_delivery_manager"
+        )
+        if is_consultant and not is_manager and set(vals) & {
+            "project_id",
+            "solution_id",
+        }:
+            raise AccessError(
+                _("Consultants cannot change a module's project or solution.")
+            )
+        return super().write(vals)

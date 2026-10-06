@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="res_partner_form_erp_delivery" model="ir.ui.view">
+        <field name="name">res.partner.form.erp.delivery</field>
+        <field name="model">res.partner</field>
+        <field name="inherit_id" ref="base.view_partner_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//notebook" position="inside">
+                <page name="erp_customer" string="ERP Customer">
+                    <group>
+                        <group>
+                            <field name="is_erp_customer"/>
+                            <field name="erp_customer_code"/>
+                            <field name="erp_tier"/>
+                            <field name="contract_expiry_date"/>
+                        </group>
+                        <group>
+                            <field name="expected_user_count"/>
+                            <field name="subscription_value" groups="erp_delivery_core.group_erp_delivery_manager"/>
+                        </group>
+                    </group>
+                    <group string="ERP Delivery Projects">
+                        <field name="erp_project_ids" nolabel="1" readonly="1">
+                            <list>
+                                <field name="project_code"/>
+                                <field name="name"/>
+                                <field name="delivery_state"/>
+                                <field name="health_status"/>
+                                <field name="go_live_expected_date"/>
+                            </list>
+                        </field>
+                    </group>
+                </page>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="res_partner_search_erp_delivery" model="ir.ui.view">
+        <field name="name">res.partner.search.erp.delivery</field>
+        <field name="model">res.partner</field>
+        <field name="inherit_id" ref="base.view_res_partner_filter"/>
+        <field name="arch" type="xml">
+            <xpath expr="//search" position="inside">
+                <field name="erp_customer_code"/>
+                <filter name="erp_customers" string="ERP Customers" domain="[('is_erp_customer', '=', True)]"/>
+            </xpath>
+            <xpath expr="//search/group" position="inside">
+                <filter name="group_erp_tier" string="ERP Tier" context="{'group_by': 'erp_tier'}"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>

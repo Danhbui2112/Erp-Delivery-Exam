@@ -1,0 +1,4 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_project_quality_gate_erp_user,project.quality.gate ERP user,model_project_quality_gate,erp_delivery_core.group_erp_delivery_user,1,0,0,0
+access_project_quality_gate_erp_consultant,project.quality.gate ERP consultant,model_project_quality_gate,erp_delivery_core.group_erp_delivery_consultant,1,1,1,0
+access_project_quality_gate_erp_manager,project.quality.gate ERP manager,model_project_quality_gate,erp_delivery_core.group_erp_delivery_manager,1,1,1,1

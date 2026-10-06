@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="rule_quality_gate_company" model="ir.rule">
+        <field name="name">ERP Quality Gate: allowed companies</field>
+        <field name="model_id" ref="model_project_quality_gate"/>
+        <field name="domain_force">[('company_id', 'in', company_ids + [False])]</field>
+    </record>
+    <record id="rule_quality_gate_consultant_scope" model="ir.rule">
+        <field name="name">ERP Quality Gate Consultant: assigned projects only</field>
+        <field name="model_id" ref="model_project_quality_gate"/>
+        <field name="domain_force">user.has_group('erp_delivery_core.group_erp_delivery_consultant') and not user.has_group('erp_delivery_core.group_erp_delivery_manager') and ['|', ('project_id.user_id', '=', user.id), ('project_id.erp_member_ids', 'in', user.id)] or []</field>
+    </record>
+    <record id="rule_quality_gate_no_consultant_unlink" model="ir.rule">
+        <field name="name">ERP Quality Gate Consultant: gates cannot be deleted</field>
+        <field name="model_id" ref="model_project_quality_gate"/>
+        <field name="domain_force">user.has_group('erp_delivery_core.group_erp_delivery_consultant') and not user.has_group('erp_delivery_core.group_erp_delivery_manager') and [('id', '=', 0)] or []</field>
+        <field name="perm_read" eval="False"/>
+        <field name="perm_write" eval="False"/>
+        <field name="perm_create" eval="False"/>
+        <field name="perm_unlink" eval="True"/>
+    </record>
+</odoo>

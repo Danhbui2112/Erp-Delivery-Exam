@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="erp_solution_view_list" model="ir.ui.view">
+        <field name="name">erp.solution.list</field>
+        <field name="model">erp.solution</field>
+        <field name="arch" type="xml">
+            <list string="ERP Solutions">
+                <field name="name"/>
+                <field name="code"/>
+                <field name="category"/>
+                <field name="company_id" groups="base.group_multi_company"/>
+                <field name="standard_effort"/>
+                <field name="service_price"/>
+                <field name="internal_cost" groups="erp_delivery_core.group_erp_delivery_manager"/>
+                <field name="active" optional="hide"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="erp_solution_view_form" model="ir.ui.view">
+        <field name="name">erp.solution.form</field>
+        <field name="model">erp.solution</field>
+        <field name="arch" type="xml">
+            <form string="ERP Solution">
+                <sheet>
+                    <div class="oe_title">
+                        <h1><field name="name"/></h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="code"/>
+                            <field name="category"/>
+                            <field name="company_id" groups="base.group_multi_company"/>
+                            <field name="active"/>
+                        </group>
+                        <group>
+                            <field name="standard_effort"/>
+                            <field name="service_price"/>
+                            <field name="internal_cost" groups="erp_delivery_core.group_erp_delivery_manager"/>
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="erp_solution_view_search" model="ir.ui.view">
+        <field name="name">erp.solution.search</field>
+        <field name="model">erp.solution</field>
+        <field name="arch" type="xml">
+            <search string="ERP Solutions">
+                <field name="name"/>
+                <field name="code"/>
+                <field name="category"/>
+                <filter name="active_solutions" string="Active" domain="[('active', '=', True)]"/>
+                <group>
+                    <filter name="group_category" string="Category" context="{'group_by': 'category'}"/>
+                    <filter name="group_company" string="Company" context="{'group_by': 'company_id'}" groups="base.group_multi_company"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_erp_solution" model="ir.actions.act_window">
+        <field name="name">ERP Solutions</field>
+        <field name="res_model">erp.solution</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="erp_solution_view_search"/>
+    </record>
+
+    <menuitem
+        id="menu_erp_delivery_root"
+        name="ERP Delivery"
+        action="action_erp_delivery_projects"
+        sequence="65"
+        groups="erp_delivery_core.group_erp_delivery_user"
+    />
+    <menuitem
+        id="menu_erp_solution"
+        name="ERP Solutions"
+        parent="menu_erp_delivery_root"
+        action="action_erp_solution"
+        sequence="20"
+        groups="erp_delivery_core.group_erp_delivery_user"
+    />
+</odoo>

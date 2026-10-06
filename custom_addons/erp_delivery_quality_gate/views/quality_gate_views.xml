@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="project_quality_gate_view_list" model="ir.ui.view">
+        <field name="name">project.quality.gate.list</field>
+        <field name="model">project.quality.gate</field>
+        <field name="arch" type="xml">
+            <list string="Go-Live Quality Gates">
+                <field name="project_id"/>
+                <field name="company_id" groups="base.group_multi_company"/>
+                <field name="score"/>
+                <field name="threshold" groups="erp_delivery_core.group_erp_delivery_manager"/>
+                <field name="is_passed" widget="badge"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="project_quality_gate_view_form" model="ir.ui.view">
+        <field name="name">project.quality.gate.form</field>
+        <field name="model">project.quality.gate</field>
+        <field name="arch" type="xml">
+            <form string="Go-Live Quality Gate">
+                <sheet>
+                    <div class="oe_title">
+                        <h1><field name="name"/></h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="project_id" readonly="id"/>
+                            <field name="company_id" groups="base.group_multi_company"/>
+                        </group>
+                        <group>
+                            <field name="score"/>
+                            <field name="threshold" groups="erp_delivery_core.group_erp_delivery_manager"/>
+                            <field name="is_passed" widget="boolean_toggle" readonly="1"/>
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="project_quality_gate_view_search" model="ir.ui.view">
+        <field name="name">project.quality.gate.search</field>
+        <field name="model">project.quality.gate</field>
+        <field name="arch" type="xml">
+            <search string="Go-Live Quality Gates">
+                <field name="project_id"/>
+                <filter name="quality_gate_passed" string="Passed" domain="[('is_passed', '=', True)]"/>
+                <filter name="quality_gate_failed" string="Not Passed" domain="[('is_passed', '=', False)]"/>
+                <group>
+                    <filter name="group_passed" string="Pass Status" context="{'group_by': 'is_passed'}"/>
+                    <filter name="group_company" string="Company" context="{'group_by': 'company_id'}" groups="base.group_multi_company"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_project_quality_gate" model="ir.actions.act_window">
+        <field name="name">Go-Live Quality Gates</field>
+        <field name="res_model">project.quality.gate</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="project_quality_gate_view_search"/>
+    </record>
+
+    <record id="project_form_quality_gate" model="ir.ui.view">
+        <field name="name">project.project.form.quality.gate</field>
+        <field name="model">project.project</field>
+        <field name="inherit_id" ref="erp_delivery_core.project_form_erp_delivery_core"/>
+        <field name="arch" type="xml">
+            <xpath expr="//page[@name='erp_delivery']" position="after">
+                <page name="quality_gate" string="Quality Gate">
+                    <button
+                        name="action_open_quality_gate"
+                        type="object"
+                        string="Evaluate Quality Gate"
+                        class="oe_highlight"
+                        groups="erp_delivery_core.group_erp_delivery_consultant"
+                    />
+                    <field name="quality_gate_ids" nolabel="1" readonly="1">
+                        <list>
+                            <field name="name"/>
+                            <field name="score"/>
+                            <field name="threshold" groups="erp_delivery_core.group_erp_delivery_manager"/>
+                            <field name="is_passed" widget="badge"/>
+                        </list>
+                    </field>
+                </page>
+            </xpath>
+        </field>
+    </record>
+
+    <menuitem
+        id="menu_project_quality_gate"
+        name="Quality Gates"
+        parent="erp_delivery_core.menu_erp_delivery_root"
+        action="action_project_quality_gate"
+        sequence="30"
+        groups="erp_delivery_core.group_erp_delivery_user"
+    />
+</odoo>

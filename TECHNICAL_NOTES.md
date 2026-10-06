@@ -13,7 +13,7 @@ flowchart LR
     Core --> Quality
 ```
 
-Addon Quality Gate là phần mở rộng đề xuất, chưa có trong workspace hiện tại. Giữ các tích hợp tùy chọn là các module đồng cấp giúp tránh vòng phụ thuộc và cho phép core cài đặt mà không cần Sales hay Quality.
+`erp_delivery_quality_gate` là addon tùy chọn thứ ba, chỉ phụ thuộc vào Core. Addon này lưu điểm/ngưỡng chất lượng và mở rộng Go-live validation; nó có thể được cài độc lập với Sales.
 
 ## 2. Lựa chọn kế thừa model
 
@@ -29,7 +29,7 @@ Cách này mở rộng workflow chuẩn thay vì sao chép hoặc tạo các b�
 
 **Computed không lưu trữ:** `sale.order.erp_project_id`, `erp_project_count`, và các trường tiền tệ phụ trợ như `erp_currency_id` và `erp.solution.currency_id`. Đây là lookup quan hệ/ngữ cảnh rẻ tiền và không cần giá trị persisted độc lập. One2many/Many2many là quan hệ, không phải cột scalar computed.
 
-Tổng hợp lưu trữ đổi chỗ đọc nhanh hơn cho chi phí recompute/write. `health_status` cũng phụ thuộc vào thời gian: trạng thái lưu trữ sẽ không tự đổi chỉ vì đã qua nửa đêm. Cần chạy scheduled recompute nếu dashboard phải phản ánh trạng thái quá hạn mà không có ghi write mới trên project/task.
+Tổng hợp lưu trữ đổi chỗ đọc nhanh hơn cho chi phí recompute/write. `health_status` cũng phụ thuộc vào thời gian nên được làm mới hàng ngày bởi cron theo các batch 500 project, tránh tải toàn bộ tập dữ liệu vào memory.
 
 ## 4. Hành vi hai chiều của duration/date
 
@@ -69,7 +69,7 @@ Mỗi addon chỉ sở hữu quy tắc riêng; action vẫn ổn định và t�
 
 Trong giới hạn ba addon, dùng Core, Sales và Quality như các module riêng biệt. Cả hai addon tùy chọn đều phụ thuộc vào Core, không phụ thuộc lẫn nhau. Sales chỉ tạo project từ confirmed orders và giữ mapping thương mại; Quality chịu trách nhiệm các field score và threshold. Nếu Go-live cần kiểm tra nào đó, mỗi addon đều mở rộng `_validate_golive_conditions()` theo kiểu cộng tác. Không cần addon bridge thứ tư hay dependency cứng giữa Sales và Quality.
 
-Workspace hiện tại chỉ triển khai Core và Sales. Chưa có model Quality Gate, field score hay contract threshold, vì vậy hành vi standalone và kết hợp của nó không thể được mô tả trung thực là đã triển khai hoặc được test bằng executable tests.
+Workspace triển khai Core, Sales và Quality Gate. Quality Gate dùng điểm 0-100, ngưỡng mặc định 80 có thể cấu hình bởi Manager; điểm dưới ngưỡng hoặc chưa có gate sẽ chặn Go-live. Sales validation và Quality validation phối hợp qua Python MRO và không phụ thuộc cứng lẫn nhau.
 
 ## 10. Kiểm soát N+1 query
 
@@ -87,4 +87,4 @@ Dùng B-tree index cho equality/domain lookup có tính chọn lọc: mã ngoạ
 
 Cài đặt `erp_delivery_core` riêng để validate domain, security, sequence và workflow Go-live. Cài đặt `erp_delivery_sale` cùng Core để validate dependency, inherited views, mapping SO-to-project/module và navigation. Chạy tests trên database disposable với Odoo `--test-enable` và module-scoped `--test-tags`; `TransactionCase` cô lập dữ liệu test thông qua transaction rollback. Giữ tests của addon tùy chọn trong package test của addon đó và thêm combined-install test khi addon và API của nó đã tồn tại.
 
-Các suite TransactionCase của core và Sales đã được chạy cùng nhau trên Odoo 19. Cài đặt Quality Gate và integration tests vẫn đang chờ triển khai.
+Các suite TransactionCase của Core, Sales và Quality Gate được chạy trên Odoo 19 theo ba cấu hình: Core+Sales, Core+Quality Gate, và cả ba addon cùng cài.

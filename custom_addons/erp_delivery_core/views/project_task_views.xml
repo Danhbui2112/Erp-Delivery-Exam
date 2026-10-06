@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="project_task_form_erp_delivery" model="ir.ui.view">
+        <field name="name">project.task.form.erp.delivery</field>
+        <field name="model">project.task</field>
+        <field name="inherit_id" ref="project.view_task_form2"/>
+        <field name="arch" type="xml">
+            <xpath expr="//notebook" position="inside">
+                <page name="erp_delivery_task" string="ERP Delivery">
+                    <group>
+                        <group string="Delivery Tracking">
+                            <field name="risk_level"/>
+                            <field name="acceptance_state"/>
+                            <field name="erp_module_id" domain="[('project_id', '=', project_id)]"/>
+                        </group>
+                        <group string="Go-Live Controls" groups="erp_delivery_core.group_erp_delivery_manager">
+                            <field name="is_mandatory_for_golive"/>
+                            <field name="progress_weight"/>
+                        </group>
+                    </group>
+                </page>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="project_task_list_erp_delivery" model="ir.ui.view">
+        <field name="name">project.task.list.erp.delivery</field>
+        <field name="model">project.task</field>
+        <field name="inherit_id" ref="project.view_task_tree2"/>
+        <field name="arch" type="xml">
+            <xpath expr="//list/field[@name='name']" position="after">
+                <field name="risk_level" optional="show"/>
+                <field name="acceptance_state" optional="show"/>
+                <field name="erp_module_id" optional="hide"/>
+                <field name="is_mandatory_for_golive" optional="hide" groups="erp_delivery_core.group_erp_delivery_manager"/>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="project_task_search_erp_delivery" model="ir.ui.view">
+        <field name="name">project.task.search.erp.delivery</field>
+        <field name="model">project.task</field>
+        <field name="inherit_id" ref="project.view_task_search_form_base"/>
+        <field name="arch" type="xml">
+            <xpath expr="//search" position="inside">
+                <field name="risk_level"/>
+                <field name="acceptance_state"/>
+                <field name="erp_module_id"/>
+                <filter name="mandatory_golive_tasks" string="Mandatory for Go-Live" domain="[('is_mandatory_for_golive', '=', True)]" groups="erp_delivery_core.group_erp_delivery_manager"/>
+                <filter name="high_delivery_risk" string="High Delivery Risk" domain="[('risk_level', 'in', ['high', 'critical'])]"/>
+            </xpath>
+            <xpath expr="//search/group" position="inside">
+                <filter name="group_risk_level" string="Risk" context="{'group_by': 'risk_level'}"/>
+                <filter name="group_acceptance_state" string="Acceptance" context="{'group_by': 'acceptance_state'}"/>
+                <filter name="group_erp_module" string="ERP Module" context="{'group_by': 'erp_module_id'}"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>

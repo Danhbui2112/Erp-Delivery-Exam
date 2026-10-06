@@ -6,9 +6,13 @@
     "depends": ["base", "project", "mail"],
     "data": [
         "data/erp_delivery_sequence.xml",
+        "data/erp_delivery_cron.xml",
         "security/erp_security.xml",
         "security/ir.model.access.csv",
         "views/project_project_views.xml",
+        "views/erp_solution_views.xml",
+        "views/res_partner_views.xml",
+        "views/project_task_views.xml",
     ],
     "installable": True,
     "application": True,

@@ -32,3 +32,14 @@ class ProjectProject(models.Model):
             "res_id": self.sale_order_id.id,
             "target": "current",
         }
+
+    def _validate_golive_conditions(self) -> None:
+        super()._validate_golive_conditions()
+        projects_with_unconfirmed_orders = self.filtered(
+            lambda project: project.sale_order_id
+            and project.sale_order_id.state not in ("sale", "done")
+        )
+        if projects_with_unconfirmed_orders:
+            raise UserError(
+                _("A linked sales order must remain confirmed before Go-Live.")
+            )

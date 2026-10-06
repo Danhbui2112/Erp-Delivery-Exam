@@ -1,10 +1,13 @@
 from typing import Any
 
-from odoo import api, fields, models
-from odoo.exceptions import UserError
+from odoo import _, api, fields, models
+from odoo.exceptions import AccessError, UserError
 
 
 CLOSED_TASK_STATES = ("1_done", "1_canceled")
+CONSULTANT_PROJECT_WRITE_FIELDS = frozenset(
+    {"delivery_state", "go_live_expected_date", "duration_days", "erp_module_ids"}
+)
 
 
 class ProjectProject(models.Model):
@@ -33,10 +36,12 @@ class ProjectProject(models.Model):
         required=True,
         tracking=True,
         copy=False,
+        index=True,
     )
     go_live_expected_date = fields.Date(
         string="Expected Go-Live Date",
         tracking=True,
+        index=True,
     )
     go_live_actual_date = fields.Date(
         string="Actual Go-Live Date",
@@ -66,6 +71,7 @@ class ProjectProject(models.Model):
         related="partner_id.erp_customer_code",
         store=True,
         readonly=True,
+        index=True,
     )
     duration_days = fields.Integer(
         string="Duration (Days)",
@@ -263,6 +269,22 @@ class ProjectProject(models.Model):
             else:
                 project.health_status = "green"
 
+    @api.model
+    def _cron_refresh_health_status(self) -> None:
+        last_id = 0
+        batch_size = 500
+        while True:
+            projects = self.sudo().search(
+                [("id", ">", last_id)],
+                order="id",
+                limit=batch_size,
+            )
+            if not projects:
+                break
+            projects._compute_health_status()
+            projects.flush_recordset(["health_status"])
+            last_id = projects[-1].id
+
     def _validate_golive_conditions(self) -> None:
         projects_without_customer = self.filtered(lambda project: not project.partner_id)
         projects_without_manager = self.filtered(lambda project: not project.user_id)
@@ -306,9 +328,28 @@ class ProjectProject(models.Model):
         if problems:
             raise UserError("\n".join(problems))
 
+    def write(self, vals: dict[str, Any]) -> bool:
+        is_consultant = self.env.user.has_group(
+            "erp_delivery_core.group_erp_delivery_consultant"
+        )
+        is_manager = self.env.user.has_group(
+            "erp_delivery_core.group_erp_delivery_manager"
+        )
+        if is_consultant and not is_manager:
+            if set(vals) - CONSULTANT_PROJECT_WRITE_FIELDS:
+                raise AccessError(
+                    _("Consultants can only update ERP delivery project fields.")
+                )
+        if (
+            vals.get("delivery_state") == "golive"
+            and not self.env.context.get("erp_delivery_golive_action")
+        ):
+            raise UserError(_("Use the Go-Live action to validate this transition."))
+        return super().write(vals)
+
     def action_golive(self) -> bool:
         self._validate_golive_conditions()
-        self.write(
+        self.with_context(erp_delivery_golive_action=True).write(
             {
                 "delivery_state": "golive",
                 "go_live_actual_date": fields.Date.context_today(self),

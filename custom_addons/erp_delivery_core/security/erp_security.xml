@@ -46,6 +46,55 @@
         <field name="model_id" ref="project.model_project_project"/>
         <field name="domain_force">user.has_group('erp_delivery_core.group_erp_delivery_consultant') and not user.has_group('erp_delivery_core.group_erp_delivery_manager') and ['|', ('user_id', '=', user.id), ('erp_member_ids', 'in', user.id)] or []</field>
     </record>
+    <record id="rule_project_task_consultant_scope" model="ir.rule">
+        <field name="name">ERP Delivery Consultant: tasks in assigned projects only</field>
+        <field name="model_id" ref="project.model_project_task"/>
+        <field name="domain_force">user.has_group('erp_delivery_core.group_erp_delivery_consultant') and not user.has_group('erp_delivery_core.group_erp_delivery_manager') and ['|', ('project_id.user_id', '=', user.id), ('project_id.erp_member_ids', 'in', user.id)] or []</field>
+    </record>
+    <record id="rule_project_erp_module_consultant_scope" model="ir.rule">
+        <field name="name">ERP Delivery Consultant: modules in assigned projects only</field>
+        <field name="model_id" ref="model_project_erp_module"/>
+        <field name="domain_force">user.has_group('erp_delivery_core.group_erp_delivery_consultant') and not user.has_group('erp_delivery_core.group_erp_delivery_manager') and ['|', ('project_id.user_id', '=', user.id), ('project_id.erp_member_ids', 'in', user.id)] or []</field>
+    </record>
+    <record id="rule_project_task_manager" model="ir.rule">
+        <field name="name">ERP Delivery Manager: tasks in allowed companies</field>
+        <field name="model_id" ref="project.model_project_task"/>
+        <field name="domain_force">[('company_id', 'in', company_ids + [False])]</field>
+        <field name="groups" eval="[(4, ref('erp_delivery_core.group_erp_delivery_manager'))]"/>
+    </record>
+    <record id="rule_project_erp_module_manager" model="ir.rule">
+        <field name="name">ERP Delivery Manager: modules in allowed companies</field>
+        <field name="model_id" ref="model_project_erp_module"/>
+        <field name="domain_force">[('company_id', 'in', company_ids + [False])]</field>
+        <field name="groups" eval="[(4, ref('erp_delivery_core.group_erp_delivery_manager'))]"/>
+    </record>
+    <record id="rule_project_project_no_consultant_unlink" model="ir.rule">
+        <field name="name">ERP Delivery Consultant: projects cannot be deleted</field>
+        <field name="model_id" ref="project.model_project_project"/>
+        <field name="domain_force">user.has_group('erp_delivery_core.group_erp_delivery_consultant') and not user.has_group('erp_delivery_core.group_erp_delivery_manager') and [('id', '=', 0)] or []</field>
+        <field name="perm_read" eval="False"/>
+        <field name="perm_write" eval="False"/>
+        <field name="perm_create" eval="False"/>
+        <field name="perm_unlink" eval="True"/>
+    </record>
+    <record id="rule_project_task_no_consultant_unlink" model="ir.rule">
+        <field name="name">ERP Delivery Consultant: tasks cannot be deleted</field>
+        <field name="model_id" ref="project.model_project_task"/>
+        <field name="domain_force">user.has_group('erp_delivery_core.group_erp_delivery_consultant') and not user.has_group('erp_delivery_core.group_erp_delivery_manager') and [('id', '=', 0)] or []</field>
+        <field name="perm_read" eval="False"/>
+        <field name="perm_write" eval="False"/>
+        <field name="perm_create" eval="False"/>
+        <field name="perm_unlink" eval="True"/>
+    </record>
+    <record id="rule_project_erp_module_no_consultant_unlink" model="ir.rule">
+        <field name="name">ERP Delivery Consultant: modules cannot be deleted</field>
+        <field name="model_id" ref="model_project_erp_module"/>
+        <field name="domain_force">user.has_group('erp_delivery_core.group_erp_delivery_consultant') and not user.has_group('erp_delivery_core.group_erp_delivery_manager') and [('id', '=', 0)] or []</field>
+        <field name="perm_read" eval="False"/>
+        <field name="perm_write" eval="False"/>
+        <field name="perm_create" eval="False"/>
+        <field name="perm_unlink" eval="True"/>
+    </record>
     <record id="rule_project_project_manager" model="ir.rule">
         <field name="name">ERP Delivery Manager: allowed-company projects</field>
         <field name="model_id" ref="project.model_project_project"/>
