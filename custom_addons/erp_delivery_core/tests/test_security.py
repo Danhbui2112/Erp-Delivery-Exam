@@ -214,6 +214,38 @@ class TestErpDeliverySecurity(TransactionCase):
         manager_solution.write({"internal_cost": 875.0})
         self.assertEqual(manager_solution.internal_cost, 875.0)
 
+    def test_delivery_read_only_role_cannot_gain_write_from_project_group(self):
+        self.company_a_user.write(
+            {
+                "group_ids": [
+                    Command.link(self.env.ref("project.group_project_manager").id)
+                ]
+            }
+        )
+        project = self.consultant_project.with_user(self.company_a_user)
+
+        with self.assertRaises(AccessError):
+            project.write({"delivery_state": "analysis"})
+        with self.assertRaises(AccessError):
+            project.unlink()
+        with self.assertRaises(AccessError):
+            project.action_golive()
+        with self.assertRaises(AccessError):
+            self.env["project.project"].with_user(self.company_a_user).create(
+                {"name": "Unauthorized Delivery Project", "company_id": self.company_a.id}
+            )
+
+    def test_standard_project_group_cannot_read_delivery_fields_without_erp_role(self):
+        project_manager = self._create_user(
+            "erp_security_project_manager_only",
+            self.company_a,
+            self.env.ref("project.group_project_manager"),
+        )
+        with self.assertRaises(AccessError):
+            self.consultant_project.with_user(project_manager).read(
+                ["delivery_state"]
+            )
+
     def test_manager_sees_all_projects_in_allowed_company(self):
         self.assertTrue(
             self.manager.has_group("erp_delivery_core.group_erp_delivery_consultant")

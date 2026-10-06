@@ -39,7 +39,7 @@ class SaleOrder(models.Model):
 
     def action_create_erp_project(self) -> dict:
         self.ensure_one()
-        if not self.env.user.has_group(
+        if not self.env.su and not self.env.user.has_group(
             "erp_delivery_core.group_erp_delivery_consultant"
         ):
             raise AccessError(

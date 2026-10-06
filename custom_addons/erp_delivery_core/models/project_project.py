@@ -148,6 +148,8 @@ class ProjectProject(models.Model):
         is_manager = self.env.user.has_group(
             "erp_delivery_core.group_erp_delivery_manager"
         )
+        if any(vals.get("delivery_state") == "golive" for vals in vals_list):
+            raise UserError(_("Use the Go-Live action after project setup."))
         if is_delivery_user and not is_manager:
             if not is_consultant:
                 raise AccessError(_("ERP Delivery users have read-only access."))
@@ -162,8 +164,6 @@ class ProjectProject(models.Model):
                 raise AccessError(
                     _("Consultants cannot set project configuration on creation.")
                 )
-            if any(vals.get("delivery_state") == "golive" for vals in vals_list):
-                raise UserError(_("Use the Go-Live action after project setup."))
         for vals in vals_list:
             if vals.get("project_code") in (False, "New"):
                 vals["project_code"] = (
@@ -394,7 +394,7 @@ class ProjectProject(models.Model):
         return super().write(vals)
 
     def action_golive(self) -> bool:
-        if not self.env.user.has_group(
+        if not self.env.su and not self.env.user.has_group(
             "erp_delivery_core.group_erp_delivery_consultant"
         ):
             raise AccessError(_("Only ERP Delivery Consultants or Managers can Go-Live."))

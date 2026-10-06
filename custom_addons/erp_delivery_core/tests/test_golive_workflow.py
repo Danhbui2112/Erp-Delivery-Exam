@@ -42,6 +42,20 @@ class TestErpDeliveryGoLive(TransactionCase):
             project.action_golive()
         self.assertNotEqual(project.delivery_state, "golive")
 
+    def test_golive_transition_cannot_bypass_action_validation(self):
+        with self.assertRaises(UserError):
+            self.env["project.project"].create(
+                {
+                    "name": "Direct Go-Live Create",
+                    "delivery_state": "golive",
+                }
+            )
+
+        project = self._create_project()
+        with self.assertRaises(UserError):
+            project.write({"delivery_state": "golive"})
+        self.assertNotEqual(project.delivery_state, "golive")
+
     def test_golive_requires_project_manager(self):
         project = self._create_project(user_id=False)
         self._assert_golive_blocked(project)
