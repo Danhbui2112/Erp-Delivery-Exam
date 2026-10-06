@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="project_form_erp_delivery_core" model="ir.ui.view">
+        <field name="name">project.project.form.erp.delivery.core</field>
+        <field name="model">project.project</field>
+        <field name="inherit_id" ref="project.edit_project"/>
+        <field name="arch" type="xml">
+            <xpath expr="//notebook" position="inside">
+                <page name="erp_delivery" string="ERP Delivery">
+                    <group>
+                        <group string="Delivery Details">
+                            <field name="project_code" readonly="1"/>
+                            <field name="delivery_state"/>
+                            <field name="customer_code" readonly="1"/>
+                            <field name="health_status" readonly="1" widget="badge"/>
+                            <field name="go_live_expected_date"/>
+                            <field name="go_live_actual_date"/>
+                            <field name="duration_days"/>
+                            <field name="contract_value"/>
+                        </group>
+                        <group string="Delivery Metrics">
+                            <field name="erp_member_ids" widget="many2many_tags"/>
+                            <field name="module_count" readonly="1"/>
+                            <field name="planned_effort_total" readonly="1"/>
+                            <field name="actual_effort_total" readonly="1"/>
+                            <field name="mandatory_task_count" readonly="1"/>
+                            <field name="mandatory_task_done_count" readonly="1"/>
+                            <field name="progress_rate" readonly="1"/>
+                        </group>
+                    </group>
+                    <group string="ERP Modules">
+                        <field name="erp_module_ids" nolabel="1">
+                            <list editable="bottom">
+                                <field name="solution_id"/>
+                                <field name="lead_consultant_id"/>
+                                <field name="planned_effort"/>
+                                <field name="actual_effort"/>
+                                <field name="price"/>
+                                <field name="state"/>
+                            </list>
+                        </field>
+                    </group>
+                </page>
+            </xpath>
+        </field>
+    </record>
+</odoo>

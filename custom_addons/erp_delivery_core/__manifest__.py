@@ -8,6 +8,7 @@
         "data/erp_delivery_sequence.xml",
         "security/erp_security.xml",
         "security/ir.model.access.csv",
+        "views/project_project_views.xml",
     ],
     "installable": True,
     "application": True,
