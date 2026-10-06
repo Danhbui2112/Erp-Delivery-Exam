@@ -9,11 +9,16 @@ class ResPartner(models.Model):
         "ERP customer code must be unique per company.",
     )
 
-    is_erp_customer = fields.Boolean(string="ERP Customer", index=True)
+    is_erp_customer = fields.Boolean(
+        string="ERP Customer",
+        index=True,
+        groups="erp_delivery_core.group_erp_delivery_user",
+    )
     erp_customer_code = fields.Char(
         string="ERP Customer Code",
         copy=False,
         index=True,
+        groups="erp_delivery_core.group_erp_delivery_user",
     )
     erp_tier = fields.Selection(
         selection=[
@@ -22,9 +27,16 @@ class ResPartner(models.Model):
             ("tier_3", "Tier 3"),
         ],
         string="ERP Customer Tier",
+        groups="erp_delivery_core.group_erp_delivery_user",
     )
-    contract_expiry_date = fields.Date(string="Contract Expiry Date")
-    expected_user_count = fields.Integer(string="Expected User Count")
+    contract_expiry_date = fields.Date(
+        string="Contract Expiry Date",
+        groups="erp_delivery_core.group_erp_delivery_user",
+    )
+    expected_user_count = fields.Integer(
+        string="Expected User Count",
+        groups="erp_delivery_core.group_erp_delivery_user",
+    )
     erp_currency_id = fields.Many2one(
         comodel_name="res.currency",
         compute="_compute_erp_currency_id",
@@ -38,6 +50,7 @@ class ResPartner(models.Model):
         comodel_name="project.project",
         inverse_name="partner_id",
         string="ERP Projects",
+        groups="erp_delivery_core.group_erp_delivery_user",
     )
 
     @api.depends("company_id")

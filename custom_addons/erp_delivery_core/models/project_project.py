@@ -19,6 +19,7 @@ class ProjectProject(models.Model):
         copy=False,
         index=True,
         default="New",
+        groups="erp_delivery_core.group_erp_delivery_user",
     )
     delivery_state = fields.Selection(
         selection=[
@@ -37,21 +38,25 @@ class ProjectProject(models.Model):
         tracking=True,
         copy=False,
         index=True,
+        groups="erp_delivery_core.group_erp_delivery_user",
     )
     go_live_expected_date = fields.Date(
         string="Expected Go-Live Date",
         tracking=True,
         index=True,
+        groups="erp_delivery_core.group_erp_delivery_user",
     )
     go_live_actual_date = fields.Date(
         string="Actual Go-Live Date",
         tracking=True,
         copy=False,
+        groups="erp_delivery_core.group_erp_delivery_user",
     )
     contract_value = fields.Monetary(
         string="Contract Value",
         currency_field="currency_id",
         tracking=True,
+        groups="erp_delivery_core.group_erp_delivery_user",
     )
     erp_member_ids = fields.Many2many(
         comodel_name="res.users",
@@ -60,11 +65,13 @@ class ProjectProject(models.Model):
         column2="user_id",
         string="ERP Delivery Members",
         check_company=True,
+        groups="erp_delivery_core.group_erp_delivery_user",
     )
     erp_module_ids = fields.One2many(
         comodel_name="project.erp.module",
         inverse_name="project_id",
         string="ERP Modules",
+        groups="erp_delivery_core.group_erp_delivery_user",
     )
     customer_code = fields.Char(
         string="Customer Code",
@@ -72,42 +79,50 @@ class ProjectProject(models.Model):
         store=True,
         readonly=True,
         index=True,
+        groups="erp_delivery_core.group_erp_delivery_user",
     )
     duration_days = fields.Integer(
         string="Duration (Days)",
         compute="_compute_duration_days",
         inverse="_inverse_duration_days",
         store=True,
+        groups="erp_delivery_core.group_erp_delivery_user",
     )
     module_count = fields.Integer(
         string="ERP Module Count",
         compute="_compute_module_metrics",
         store=True,
+        groups="erp_delivery_core.group_erp_delivery_user",
     )
     planned_effort_total = fields.Float(
         string="Planned Effort Total",
         compute="_compute_module_metrics",
         store=True,
+        groups="erp_delivery_core.group_erp_delivery_user",
     )
     actual_effort_total = fields.Float(
         string="Actual Effort Total",
         compute="_compute_module_metrics",
         store=True,
+        groups="erp_delivery_core.group_erp_delivery_user",
     )
     mandatory_task_count = fields.Integer(
         string="Mandatory Task Count",
         compute="_compute_task_metrics",
         store=True,
+        groups="erp_delivery_core.group_erp_delivery_user",
     )
     mandatory_task_done_count = fields.Integer(
         string="Mandatory Tasks Done",
         compute="_compute_task_metrics",
         store=True,
+        groups="erp_delivery_core.group_erp_delivery_user",
     )
     progress_rate = fields.Float(
         string="Mandatory Task Progress (%)",
         compute="_compute_task_metrics",
         store=True,
+        groups="erp_delivery_core.group_erp_delivery_user",
     )
     health_status = fields.Selection(
         selection=[
@@ -119,10 +134,36 @@ class ProjectProject(models.Model):
         compute="_compute_health_status",
         store=True,
         index=True,
+        groups="erp_delivery_core.group_erp_delivery_user",
     )
 
     @api.model_create_multi
     def create(self, vals_list: list[dict[str, Any]]) -> models.Model:
+        is_delivery_user = self.env.user.has_group(
+            "erp_delivery_core.group_erp_delivery_user"
+        )
+        is_consultant = self.env.user.has_group(
+            "erp_delivery_core.group_erp_delivery_consultant"
+        )
+        is_manager = self.env.user.has_group(
+            "erp_delivery_core.group_erp_delivery_manager"
+        )
+        if is_delivery_user and not is_manager:
+            if not is_consultant:
+                raise AccessError(_("ERP Delivery users have read-only access."))
+            protected_fields = {
+                "privacy_visibility",
+                "allow_milestones",
+                "alias_name",
+                "alias_domain_id",
+                "project_code",
+            }
+            if any(protected_fields.intersection(vals) for vals in vals_list):
+                raise AccessError(
+                    _("Consultants cannot set project configuration on creation.")
+                )
+            if any(vals.get("delivery_state") == "golive" for vals in vals_list):
+                raise UserError(_("Use the Go-Live action after project setup."))
         for vals in vals_list:
             if vals.get("project_code") in (False, "New"):
                 vals["project_code"] = (
@@ -329,12 +370,17 @@ class ProjectProject(models.Model):
             raise UserError("\n".join(problems))
 
     def write(self, vals: dict[str, Any]) -> bool:
+        is_delivery_user = self.env.user.has_group(
+            "erp_delivery_core.group_erp_delivery_user"
+        )
         is_consultant = self.env.user.has_group(
             "erp_delivery_core.group_erp_delivery_consultant"
         )
         is_manager = self.env.user.has_group(
             "erp_delivery_core.group_erp_delivery_manager"
         )
+        if is_delivery_user and not is_manager and not is_consultant:
+            raise AccessError(_("ERP Delivery users have read-only access."))
         if is_consultant and not is_manager:
             if set(vals) - CONSULTANT_PROJECT_WRITE_FIELDS:
                 raise AccessError(
@@ -348,6 +394,10 @@ class ProjectProject(models.Model):
         return super().write(vals)
 
     def action_golive(self) -> bool:
+        if not self.env.user.has_group(
+            "erp_delivery_core.group_erp_delivery_consultant"
+        ):
+            raise AccessError(_("Only ERP Delivery Consultants or Managers can Go-Live."))
         self._validate_golive_conditions()
         self.with_context(erp_delivery_golive_action=True).write(
             {

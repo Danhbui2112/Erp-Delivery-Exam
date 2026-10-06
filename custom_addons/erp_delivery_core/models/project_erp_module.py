@@ -1,4 +1,4 @@
-from odoo import _, fields, models
+from odoo import _, api, fields, models
 from odoo.exceptions import AccessError
 
 
@@ -63,12 +63,17 @@ class ProjectErpModule(models.Model):
     )
 
     def write(self, vals):
+        is_delivery_user = self.env.user.has_group(
+            "erp_delivery_core.group_erp_delivery_user"
+        )
         is_consultant = self.env.user.has_group(
             "erp_delivery_core.group_erp_delivery_consultant"
         )
         is_manager = self.env.user.has_group(
             "erp_delivery_core.group_erp_delivery_manager"
         )
+        if is_delivery_user and not is_manager and not is_consultant:
+            raise AccessError(_("ERP Delivery users have read-only access."))
         if is_consultant and not is_manager and set(vals) & {
             "project_id",
             "solution_id",
@@ -77,3 +82,18 @@ class ProjectErpModule(models.Model):
                 _("Consultants cannot change a module's project or solution.")
             )
         return super().write(vals)
+
+    @api.model_create_multi
+    def create(self, vals_list):
+        is_delivery_user = self.env.user.has_group(
+            "erp_delivery_core.group_erp_delivery_user"
+        )
+        is_consultant = self.env.user.has_group(
+            "erp_delivery_core.group_erp_delivery_consultant"
+        )
+        is_manager = self.env.user.has_group(
+            "erp_delivery_core.group_erp_delivery_manager"
+        )
+        if is_delivery_user and not is_manager and not is_consultant:
+            raise AccessError(_("ERP Delivery users have read-only access."))
+        return super().create(vals_list)

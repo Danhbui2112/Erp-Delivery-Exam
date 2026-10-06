@@ -10,6 +10,7 @@ class ProjectProject(models.Model):
         inverse_name="project_id",
         string="Quality Gate",
         readonly=True,
+        groups="erp_delivery_core.group_erp_delivery_user",
     )
 
     def _validate_golive_conditions(self) -> None:

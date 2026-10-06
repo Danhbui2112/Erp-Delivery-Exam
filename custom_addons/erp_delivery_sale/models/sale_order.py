@@ -1,5 +1,5 @@
 from odoo import _, api, fields, models
-from odoo.exceptions import UserError
+from odoo.exceptions import AccessError, UserError
 
 
 class SaleOrder(models.Model):
@@ -39,6 +39,12 @@ class SaleOrder(models.Model):
 
     def action_create_erp_project(self) -> dict:
         self.ensure_one()
+        if not self.env.user.has_group(
+            "erp_delivery_core.group_erp_delivery_consultant"
+        ):
+            raise AccessError(
+                _("Only ERP Delivery Consultants or Managers can create delivery projects.")
+            )
         if self.state not in ("sale", "done"):
             raise UserError(_("An ERP project can only be created from a confirmed sales order."))
         if self.env["project.project"].sudo().search_count(

@@ -25,6 +25,7 @@ class ProjectTask(models.Model):
     is_mandatory_for_golive = fields.Boolean(
         string="Mandatory for Go-Live",
         index=True,
+        groups="erp_delivery_core.group_erp_delivery_user",
     )
     risk_level = fields.Selection(
         selection=[
@@ -35,8 +36,13 @@ class ProjectTask(models.Model):
         ],
         string="Risk Level",
         index=True,
+        groups="erp_delivery_core.group_erp_delivery_user",
     )
-    progress_weight = fields.Float(string="Progress Weight", default=1.0)
+    progress_weight = fields.Float(
+        string="Progress Weight",
+        default=1.0,
+        groups="erp_delivery_core.group_erp_delivery_user",
+    )
     acceptance_state = fields.Selection(
         selection=[
             ("pending", "Pending"),
@@ -47,6 +53,7 @@ class ProjectTask(models.Model):
         default="pending",
         required=True,
         index=True,
+        groups="erp_delivery_core.group_erp_delivery_user",
     )
     erp_module_id = fields.Many2one(
         comodel_name="project.erp.module",
@@ -54,15 +61,23 @@ class ProjectTask(models.Model):
         ondelete="set null",
         check_company=True,
         index=True,
+        groups="erp_delivery_core.group_erp_delivery_user",
     )
 
     @api.model_create_multi
     def create(self, vals_list):
-        if self.env.user.has_group(
+        is_delivery_user = self.env.user.has_group(
+            "erp_delivery_core.group_erp_delivery_user"
+        )
+        is_consultant = self.env.user.has_group(
             "erp_delivery_core.group_erp_delivery_consultant"
-        ) and not self.env.user.has_group(
+        )
+        is_manager = self.env.user.has_group(
             "erp_delivery_core.group_erp_delivery_manager"
-        ):
+        )
+        if is_delivery_user and not is_manager and not is_consultant:
+            raise AccessError(_("ERP Delivery users have read-only access."))
+        if is_consultant and not is_manager:
             if any(set(vals) - CONSULTANT_TASK_CREATE_FIELDS for vals in vals_list):
                 raise AccessError(
                     _("Consultants cannot change task configuration on creation.")
@@ -70,12 +85,17 @@ class ProjectTask(models.Model):
         return super().create(vals_list)
 
     def write(self, vals):
+        is_delivery_user = self.env.user.has_group(
+            "erp_delivery_core.group_erp_delivery_user"
+        )
         is_consultant = self.env.user.has_group(
             "erp_delivery_core.group_erp_delivery_consultant"
         )
         is_manager = self.env.user.has_group(
             "erp_delivery_core.group_erp_delivery_manager"
         )
+        if is_delivery_user and not is_manager and not is_consultant:
+            raise AccessError(_("ERP Delivery users have read-only access."))
         if is_consultant and not is_manager:
             if set(vals) - CONSULTANT_TASK_WRITE_FIELDS:
                 raise AccessError(
