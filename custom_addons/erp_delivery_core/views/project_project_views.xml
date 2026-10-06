@@ -26,10 +26,12 @@
                             <field name="go_live_expected_date"/>
                             <field name="go_live_actual_date" readonly="1"/>
                             <field name="duration_days"/>
-                            <field name="contract_value" readonly="1"/>
+                            <field name="contract_value" groups="erp_delivery_core.group_erp_delivery_manager"/>
+                            <field name="contract_value" groups="!erp_delivery_core.group_erp_delivery_manager" readonly="1"/>
                         </group>
                         <group string="Delivery Metrics">
-                            <field name="erp_member_ids" widget="many2many_tags" readonly="1"/>
+                            <field name="erp_member_ids" widget="many2many_tags" groups="erp_delivery_core.group_erp_delivery_manager"/>
+                            <field name="erp_member_ids" widget="many2many_tags" groups="!erp_delivery_core.group_erp_delivery_manager" readonly="1"/>
                             <field name="module_count" readonly="1"/>
                             <field name="planned_effort_total" readonly="1"/>
                             <field name="actual_effort_total" readonly="1"/>

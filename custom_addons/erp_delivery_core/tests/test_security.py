@@ -135,6 +135,23 @@ class TestErpDeliverySecurity(TransactionCase):
                 "solution_id": self.solution.id,
             }
         )
+        company_b_task = self.env["project.task"].create(
+            {"name": "Company B Task", "project_id": self.company_b_project.id}
+        )
+        company_b_solution = self.env["erp.solution"].create(
+            {
+                "name": "Company B Solution",
+                "code": "ERP-SECURITY-B",
+                "category": "custom",
+                "company_id": self.company_b.id,
+            }
+        )
+        company_b_module = self.env["project.erp.module"].create(
+            {
+                "project_id": self.company_b_project.id,
+                "solution_id": company_b_solution.id,
+            }
+        )
 
         task_model = self.env["project.task"].with_user(self.consultant).with_context(
             allowed_company_ids=[self.company_a.id]
@@ -143,19 +160,37 @@ class TestErpDeliverySecurity(TransactionCase):
             self.consultant
         ).with_context(allowed_company_ids=[self.company_a.id])
         self.assertEqual(
-            task_model.search([("id", "in", [own_task.id, other_task.id])]).ids,
+            task_model.search(
+                [
+                    (
+                        "id",
+                        "in",
+                        [own_task.id, other_task.id, company_b_task.id],
+                    )
+                ]
+            ).ids,
             [own_task.id],
         )
         self.assertEqual(
             module_model.search(
-                [("id", "in", [own_module.id, other_module.id])]
+                [
+                    (
+                        "id",
+                        "in",
+                        [own_module.id, other_module.id, company_b_module.id],
+                    )
+                ]
             ).ids,
             [own_module.id],
         )
         with self.assertRaises(AccessError):
             other_task.with_user(self.consultant).read(["name"])
         with self.assertRaises(AccessError):
+            company_b_task.with_user(self.consultant).read(["name"])
+        with self.assertRaises(AccessError):
             other_module.with_user(self.consultant).read(["planned_effort"])
+        with self.assertRaises(AccessError):
+            company_b_module.with_user(self.consultant).read(["planned_effort"])
         with self.assertRaises(AccessError):
             own_task.with_user(self.consultant).unlink()
         with self.assertRaises(AccessError):
@@ -205,6 +240,12 @@ class TestErpDeliverySecurity(TransactionCase):
                 self.member_project.id,
                 self.other_project.id,
             },
+        )
+        self.assertFalse(
+            self.env["project.project"]
+            .with_user(self.manager)
+            .with_context(allowed_company_ids=[self.company_a.id])
+            .search([("id", "=", self.company_b_project.id)])
         )
 
     def test_user_cannot_query_projects_from_another_company(self):

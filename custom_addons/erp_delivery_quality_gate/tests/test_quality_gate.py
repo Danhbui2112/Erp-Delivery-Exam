@@ -1,4 +1,5 @@
-from odoo.exceptions import UserError
+from odoo import Command
+from odoo.exceptions import AccessError, UserError
 from odoo.tests.common import TransactionCase
 
 
@@ -14,6 +15,20 @@ class TestErpDeliveryQualityGate(TransactionCase):
                 "name": "Quality Gate Solution",
                 "code": "QUALITY-GATE",
                 "category": "custom",
+            }
+        )
+        cls.consultant_group = cls.env.ref(
+            "erp_delivery_core.group_erp_delivery_consultant"
+        )
+        cls.consultant = cls.env["res.users"].with_context(
+            no_reset_password=True
+        ).create(
+            {
+                "name": "Quality Gate Consultant",
+                "login": "quality_gate_consultant",
+                "company_id": cls.env.company.id,
+                "company_ids": [Command.set([cls.env.company.id])],
+                "group_ids": [Command.set(cls.consultant_group.ids)],
             }
         )
 
@@ -55,3 +70,21 @@ class TestErpDeliveryQualityGate(TransactionCase):
         gate.write({"score": 80.0})
         self.assertTrue(gate.is_passed)
         self.assertTrue(project.action_golive())
+
+    def test_consultant_can_update_score_but_not_read_or_change_threshold(self):
+        project = self._create_project()
+        project.write({"erp_member_ids": [Command.link(self.consultant.id)]})
+        gate = self.env["project.quality.gate"].create(
+            {"project_id": project.id, "score": 70.0}
+        )
+        consultant_gate = gate.with_user(self.consultant).with_context(
+            allowed_company_ids=[self.env.company.id]
+        )
+
+        with self.assertRaises(AccessError):
+            consultant_gate.read(["threshold"])
+        with self.assertRaises(AccessError):
+            consultant_gate.write({"threshold": 90.0})
+
+        consultant_gate.write({"score": 85.0})
+        self.assertTrue(consultant_gate.is_passed)

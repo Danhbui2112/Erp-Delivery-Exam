@@ -1,3 +1,6 @@
+from unittest.mock import patch
+
+from odoo import fields
 from odoo.tests.common import TransactionCase
 
 
@@ -24,7 +27,7 @@ class TestErpDeliveryBatchPerformance(TransactionCase):
                 for index in range(50)
             ]
         )
-        self.env["project.erp.module"].create(
+        modules = self.env["project.erp.module"].create(
             [
                 {
                     "project_id": project.id,
@@ -35,7 +38,7 @@ class TestErpDeliveryBatchPerformance(TransactionCase):
                 for project in projects
             ]
         )
-        self.env["project.task"].create(
+        tasks = self.env["project.task"].create(
             [
                 {
                     "name": f"Task {project_index}-{task_index}",
@@ -64,6 +67,13 @@ class TestErpDeliveryBatchPerformance(TransactionCase):
         self.assertEqual(projects.mapped("module_count"), [1] * 50)
         self.assertEqual(projects.mapped("mandatory_task_count"), [10] * 50)
         self.assertEqual(projects.mapped("progress_rate"), [0.0] * 50)
+
+        modules.write({"actual_effort": 3.0})
+        tasks.write({"risk_level": "high"})
+        self.env.flush_all()
+
+        self.assertEqual(projects.mapped("actual_effort_total"), [3.0] * 50)
+        self.assertEqual(projects.mapped("health_status"), ["amber"] * 50)
 
     def test_stored_metrics_recompute_when_source_records_change(self):
         company = self.env.company
@@ -107,3 +117,33 @@ class TestErpDeliveryBatchPerformance(TransactionCase):
 
         self.assertEqual(project.actual_effort_total, 3.0)
         self.assertEqual(project.health_status, "amber")
+
+    def test_health_cron_refreshes_status_when_go_live_date_passes(self):
+        today = fields.Date.today()
+        project = self.env["project.project"].create(
+            {
+                "name": "Overdue Health Project",
+                "company_id": self.env.company.id,
+                "partner_id": self.env["res.partner"].create(
+                    {"name": "Overdue Health Customer"}
+                ).id,
+                "user_id": self.env.user.id,
+                "date_start": fields.Date.add(today, days=-10),
+                "go_live_expected_date": fields.Date.add(today, days=1),
+            }
+        )
+        self.env["project.task"].create(
+            {
+                "name": "Overdue Health Task",
+                "project_id": project.id,
+                "is_mandatory_for_golive": True,
+                "progress_weight": 1.0,
+            }
+        )
+        self.assertEqual(project.health_status, "amber")
+
+        day_after_go_live = fields.Date.add(project.go_live_expected_date, days=1)
+        with patch.object(fields.Date, "today", return_value=day_after_go_live):
+            self.env["project.project"]._cron_refresh_health_status()
+
+        self.assertEqual(project.health_status, "red")
