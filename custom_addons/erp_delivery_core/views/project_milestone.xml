@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="project_milestone_view_from_erp_delivery" model="ir.ui.view">
+        <field name="name">project.milestone.form.erp.delivery</field>
+        <field name="model">project.milestone</field>
+        <field name="inherit_id" ref="project.project_milestone_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='deadline']" position="after">
+                <field name="is_mandatory_for_golive"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>

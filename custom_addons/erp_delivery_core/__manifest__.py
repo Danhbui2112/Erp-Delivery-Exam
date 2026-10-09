@@ -13,6 +13,7 @@
         "views/erp_solution_views.xml",
         "views/res_partner_views.xml",
         "views/project_task_views.xml",
+        "views/project_milestone_views.xml",
     ],
     "installable": True,
     "application": True,
