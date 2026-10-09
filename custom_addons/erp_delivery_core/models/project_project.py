@@ -1,7 +1,7 @@
 from typing import Any
 
 from odoo import _, api, fields, models
-from odoo.exceptions import AccessError, UserError
+from odoo.exceptions import AccessError, UserError, ValidationError
 
 
 CLOSED_TASK_STATES = ("1_done", "1_canceled")
@@ -181,6 +181,18 @@ class ProjectProject(models.Model):
                 ).days
             else:
                 project.duration_days = 0
+    
+    @api.constrains("date_start", "go_live_expected_date")
+    def _check_go_live_date_order(self) -> None:
+        for project in self:
+            if (
+                project.date_start
+                and project.go_live_expected_date
+                and project.go_live_expected_date < project.date_start
+            ):
+                raise ValidationError(
+                    _("Expected Go-Live date cannot be earlier than project start date.")
+                )
 
     def _inverse_duration_days(self) -> None:
         for project in self:
@@ -330,6 +342,9 @@ class ProjectProject(models.Model):
         projects_without_customer = self.filtered(lambda project: not project.partner_id)
         projects_without_manager = self.filtered(lambda project: not project.user_id)
         projects_without_modules = self.filtered(lambda project: not project.erp_module_ids)
+        projects_without_expected_date = self.filtered(
+            lambda project: not project.go_live_expected_date
+        )
         problems = []
         if projects_without_customer:
             problems.append("Every project must have a customer.")
@@ -337,7 +352,8 @@ class ProjectProject(models.Model):
             problems.append("Every project must have a project manager.")
         if projects_without_modules:
             problems.append("Every project must include at least one ERP module.")
-
+        if projects_without_expected_date:
+            problems.append("Every project must have an expected Go-Live date.")
         project_ids = self.ids
         open_mandatory = self.env["project.task"]._read_group(
             [
