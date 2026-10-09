@@ -28,6 +28,18 @@ class ProjectQualityGate(models.Model):
         readonly=True,
         index=True,
     )
+    currency_id = fields.Many2one(
+        related="project_id.currency_id",
+        string="Currency",
+        readonly=True,
+    )
+    contract_value = fields.Monetary(
+        related="project_id.contract_value",
+        string="Contract value",
+        currency_field="currency_id",
+        readonly=True,
+        groups="erp_delivery_core.group_erp_delivery_user",
+    )
     name = fields.Char(required=True, default="Go-Live Quality Gate")
     score = fields.Float(string="Quality Score", default=0.0, required=True)
     threshold = fields.Float(

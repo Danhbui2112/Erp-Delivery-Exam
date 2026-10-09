@@ -27,6 +27,8 @@
                         <group>
                             <field name="project_id" readonly="id"/>
                             <field name="company_id" groups="base.group_multi_company"/>
+                            <field name="contract_value" groups="erp_delivery_core.group_erp_delivery_user"/>
+                            <field name="currency_id" invisible="1"/>
                         </group>
                         <group>
                             <field name="score"/>
