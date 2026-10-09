@@ -301,7 +301,7 @@ class ProjectProject(models.Model):
             risks_by_project.setdefault(project.id, set()).add(risk_level)
         
         now = fields.Datetime.now()
-        overdue_tasks = self.env["project_task"]._read_group(
+        overdue_tasks = self.env["project.task"]._read_group(
             [
                 ("project_id", "in", self.ids),
                 ("state", "not in", CLOSED_TASK_STATES),
