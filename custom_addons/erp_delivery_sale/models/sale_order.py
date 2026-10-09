@@ -67,6 +67,7 @@ class SaleOrder(models.Model):
         project = self.env["project.project"].create(
             {
                 "name": _("%(order)s - %(customer)s", order=self.name, customer=self.partner_id.display_name),
+                "is_erp_delivery": True,
                 "company_id": self.company_id.id,
                 "partner_id": self.partner_id.id,
                 "user_id": self.user_id.id or self.env.user.id,
