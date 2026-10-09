@@ -272,6 +272,7 @@ class ProjectProject(models.Model):
         "progress_rate",
         "tasks.risk_level",
         "tasks.state",
+        "tasks.date_deadline",
     )
     def _compute_health_status(self) -> None:
         grouped_risks = self.env["project.task"]._read_group(
@@ -286,6 +287,20 @@ class ProjectProject(models.Model):
         risks_by_project: dict[int, set[str]] = {}
         for project, risk_level, _count in grouped_risks:
             risks_by_project.setdefault(project.id, set()).add(risk_level)
+        
+        now = fields.Datetime.now()
+        overdue_tasks = self.env["project_task"]._read_group(
+            [
+                ("project_id", "in", self.ids),
+                ("state", "not in", CLOSED_TASK_STATES),
+                ("risk_level", "<", now),
+            ],
+            ["project_id"],
+            ["__count"],
+        )
+        projects_with_overdue_tasks = {
+            project.id for project, _count in overdue_tasks
+        }
 
         today = fields.Date.today()
         for project in self:
@@ -320,7 +335,12 @@ class ProjectProject(models.Model):
                 expected_progress = elapsed_days / planned_days * 100.0
                 is_behind_schedule = project.progress_rate < expected_progress
 
-            if is_behind_schedule or risks.intersection(("medium", "high")):
+            has_overdue_tasks = project.id in projects_with_overdue_tasks
+            if (
+                has_overdue_tasks
+                or is_behind_schedule
+                or risks.intersection(("medium", "high"))
+            ):
                 project.health_status = "amber"
             else:
                 project.health_status = "green"
