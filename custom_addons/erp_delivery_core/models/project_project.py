@@ -18,7 +18,14 @@ class ProjectProject(models.Model):
         readonly=True,
         copy=False,
         index=True,
-        default="New",
+        default=False,
+        groups="erp_delivery_core.group_erp_delivery_user",
+    )
+    is_erp_delivery = fields.Boolean(
+        string="ERP Delivery Project",
+        default=False,
+        copy=False,
+        index=True,
         groups="erp_delivery_core.group_erp_delivery_user",
     )
     delivery_state = fields.Selection(
@@ -165,11 +172,16 @@ class ProjectProject(models.Model):
                     _("Consultants cannot set project configuration on creation.")
                 )
         for vals in vals_list:
-            if vals.get("project_code") in (False, "New"):
-                vals["project_code"] = (
-                    self.env["ir.sequence"].next_by_code("erp.delivery.project")
-                    or "New"
-                )
+            if vals.get("is_erp_delivery"):
+                if vals.get("project_code") in (False, "New"):
+                    vals["project_code"] = (
+                        self.env["ir.sequence"].next_by_code(
+                            "erp.delivery.project"
+                        )
+                        or False
+                    )
+            else:
+                vals["project_code"] = False
         return super().create(vals_list)
 
     @api.depends("date_start", "go_live_expected_date")
