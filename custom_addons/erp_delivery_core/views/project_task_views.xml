@@ -43,16 +43,16 @@
         <field name="inherit_id" ref="project.view_task_search_form_base"/>
         <field name="arch" type="xml">
             <xpath expr="//search" position="inside">
-                <field name="risk_level"/>
-                <field name="acceptance_state"/>
-                <field name="erp_module_id"/>
+                <field name="risk_level" groups="erp_delivery_core.group_erp_delivery_user"/>
+                <field name="acceptance_state" groups="erp_delivery_core.group_erp_delivery_user"/>
+                <field name="erp_module_id" groups="erp_delivery_core.group_erp_delivery_user"/>
                 <filter name="mandatory_golive_tasks" string="Mandatory for Go-Live" domain="[('is_mandatory_for_golive', '=', True)]" groups="erp_delivery_core.group_erp_delivery_manager"/>
-                <filter name="high_delivery_risk" string="High Delivery Risk" domain="[('risk_level', 'in', ['high', 'critical'])]"/>
+                <filter name="high_delivery_risk" string="High Delivery Risk" domain="[('risk_level', 'in', ['high', 'critical'])]" groups="erp_delivery_core.group_erp_delivery_user"/>
             </xpath>
             <xpath expr="//search/group" position="inside">
-                <filter name="group_risk_level" string="Risk" context="{'group_by': 'risk_level'}"/>
-                <filter name="group_acceptance_state" string="Acceptance" context="{'group_by': 'acceptance_state'}"/>
-                <filter name="group_erp_module" string="ERP Module" context="{'group_by': 'erp_module_id'}"/>
+                <filter name="group_risk_level" string="Risk" context="{'group_by': 'risk_level'}" groups="erp_delivery_core.group_erp_delivery_user"/>
+                <filter name="group_acceptance_state" string="Acceptance" context="{'group_by': 'acceptance_state'}" groups="erp_delivery_core.group_erp_delivery_user"/>
+                <filter name="group_erp_module" string="ERP Module" context="{'group_by': 'erp_module_id'}" groups="erp_delivery_core.group_erp_delivery_user"/>
             </xpath>
         </field>
     </record>

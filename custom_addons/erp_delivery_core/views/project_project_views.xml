@@ -64,18 +64,20 @@
         <field name="inherit_id" ref="project.view_project_project_filter"/>
         <field name="arch" type="xml">
             <xpath expr="//search" position="inside">
-                <field name="project_code"/>
-                <field name="delivery_state"/>
-                <field name="health_status"/>
+                <field name="project_code" groups="erp_delivery_core.group_erp_delivery_user"/>
+                <field name="delivery_state" groups="erp_delivery_core.group_erp_delivery_user"/>
+                <field name="health_status" groups="erp_delivery_core.group_erp_delivery_user"/>
                 <filter
                     name="expected_golive_date"
                     string="Expected Go-Live"
                     date="go_live_expected_date"
+                    groups="erp_delivery_core.group_erp_delivery_user"
                 />
                 <filter
                     name="delivery_at_risk"
                     string="At Risk or Critical"
                     domain="[('health_status', 'in', ['amber', 'red'])]"
+                    groups="erp_delivery_core.group_erp_delivery_user"
                 />
             </xpath>
             <xpath expr="//search/group" position="inside">
@@ -83,16 +85,19 @@
                     name="group_delivery_state"
                     string="Delivery Status"
                     context="{'group_by': 'delivery_state'}"
+                    groups="erp_delivery_core.group_erp_delivery_user"
                 />
                 <filter
                     name="group_delivery_health"
                     string="Delivery Health"
                     context="{'group_by': 'health_status'}"
+                    groups="erp_delivery_core.group_erp_delivery_user"
                 />
                 <filter
                     name="group_expected_golive_month"
                     string="Expected Go-Live Month"
                     context="{'group_by': 'go_live_expected_date:month'}"
+                    groups="erp_delivery_core.group_erp_delivery_user"
                 />
             </xpath>
         </field>
