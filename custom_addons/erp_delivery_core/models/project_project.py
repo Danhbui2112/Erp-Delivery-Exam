@@ -388,6 +388,22 @@ class ProjectProject(models.Model):
         if problems:
             raise UserError("\n".join(problems))
 
+        open_mandatory_milestones = (
+            self.env["project.milestone"]
+            .sudo()
+            ._read_group(
+                [
+                    ("project_id", "in", self.ids),
+                    ("is_mandatory_for_golive", "=", True),
+                    ("is_reached", "=", False),
+                ],
+                ["project_id"],
+                ["__count"],
+            )
+        )
+        if open_mandatory_milestones:
+            problems.append("All mandatory go-live milestones must be reached.")
+
     def write(self, vals: dict[str, Any]) -> bool:
         is_delivery_user = self.env.user.has_group(
             "erp_delivery_core.group_erp_delivery_user"
