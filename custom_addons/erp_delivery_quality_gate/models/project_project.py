@@ -30,6 +30,18 @@ class ProjectProject(models.Model):
             raise UserError(
                 _("Every project must pass its Quality Gate before Go-Live.")
             )
+        project_model = self.env["project.project"]
+        if "sale_order_id" not in project_model._fields:
+            return
+        
+        projects_with_customer_mismatch = self.filltered(
+            lambda project: project.sale_order_id
+            and project.sale_order_id.partner_id != project.partner_id
+        )
+        if projects_witH_customer_mismatch:
+            raise UserError(
+                _("The project's customer must match the linked sales order customer.")
+            )
 
     def action_open_quality_gate(self) -> dict:
         self.ensure_one()

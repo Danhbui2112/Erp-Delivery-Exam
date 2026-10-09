@@ -123,5 +123,6 @@
         <field name="view_mode">kanban,list,form</field>
         <field name="search_view_id" ref="project.view_project_project_filter"/>
         <field name="domain">[('is_erp_delivery', '=', True)]</field>
+        <field name="context">{'default_is_erp_delivery': True}</field>
     </record>
 </odoo>
