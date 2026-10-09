@@ -185,13 +185,16 @@ class ProjectProject(models.Model):
     @api.constrains("date_start", "go_live_expected_date")
     def _check_go_live_date_order(self) -> None:
         for project in self:
-            if (
+            start_date = (
                 project.date_start
-                and project.go_live_expected_date
-                and project.go_live_expected_date < project.date_start
+                or fields.Date.context_today(project)
+            )
+            if (
+                project.go_live_expected_date
+                and project.go_live_expected_date < start_date
             ):
                 raise ValidationError(
-                    _("Expected Go-Live date cannot be earlier than project start date.")
+                    _("Expected Go-Live date cannot be earlier than the project start date.")
                 )
 
     def _inverse_duration_days(self) -> None:
