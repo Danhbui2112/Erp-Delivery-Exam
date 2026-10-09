@@ -20,6 +20,7 @@
                     <group>
                         <group string="Delivery Details">
                             <field name="project_code" readonly="1"/>
+                            <field name="is_erp_delivery"/>
                             <field name="delivery_state"/>
                             <field name="customer_code" readonly="1"/>
                             <field name="health_status" readonly="1" widget="badge"/>

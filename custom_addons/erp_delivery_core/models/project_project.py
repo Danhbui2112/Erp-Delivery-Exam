@@ -465,6 +465,10 @@ class ProjectProject(models.Model):
             "erp_delivery_core.group_erp_delivery_consultant"
         ):
             raise AccessError(_("Only ERP Delivery Consultants or Managers can Go-Live."))
+        if self.filtered(lambda project: not project.is_erp_delivery):
+            raise UserError(
+                _("Only ERP Delivery projects can use this Go-Live action.")
+            )
         self._validate_golive_conditions()
         self.with_context(erp_delivery_golive_action=True).write(
             {
