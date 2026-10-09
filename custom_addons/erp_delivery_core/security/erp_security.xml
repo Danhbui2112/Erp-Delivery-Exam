@@ -101,4 +101,40 @@
         <field name="domain_force">[('company_id', 'in', company_ids + [False])]</field>
         <field name="groups" eval="[(4, ref('erp_delivery_core.group_erp_delivery_manager'))]"/>
     </record>
+    <record id="rule_project_erp_scope" model="ir.rule">
+        <field name="name">ERP Delivery users: projects in allowed companies</field>
+        <field name="model_id" ref="project.model_project_project"/>
+        <field name="domain_force">
+            user.has_group('erp_delivery_core.group_erp_delivery_user')
+            and [
+                ('company_id', 'in', company_ids +[False]),
+                ('is_erp_delivery', '=', True)
+            ]
+            or []
+        </field>
+    </record>
+    <record id="rule_project_task_erp_scope" model="ir.rule">
+        <field name="name">ERP Delivery users: tasks in allowed companies and projects</field>
+        <field name="model_id" ref="project.model_project_task"/>
+        <field name="domain_force">
+            user.has_group('erp_delivery_core.group_erp_delivery_user')
+            and [
+                ('company_id', 'in', company_ids + [False]),
+                ('project_id.is_erp_delivery', '=', True)
+            ]
+            or []
+        </field>
+    </record>
+    <record id="rule_project_erp_module_erp_scope" model="ir.rule">
+        <field name="name">ERP Delivery users: modules in allowed companies and projects</field>
+        <field name="model_id" ref="model_project_erp_module"/>
+        <field name="domain_force">
+            user.has_group('erp_delivery_core.group_erp_delivery_user')
+            and [
+                ('company_id', 'in', company_ids + [False]),
+                ('project_id.is_erp_delivery', '=', True)
+            ]
+            or []
+        </field>
+    </record>
 </odoo>
